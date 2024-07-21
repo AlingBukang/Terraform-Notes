@@ -40,4 +40,4 @@
 - `terraform get`: Downloads and installs modules needed for the configuration.
 - `terraform console`: Provides an interactive console for evaluating expressions.
 
-Remember to always check the official Terraform documentation for the most up-to-date and detailed information.
+Remember to always check the official [Terraform](https://www.terraform.io/) documentation for the most up-to-date and detailed information.
