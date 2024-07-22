@@ -1,110 +1,68 @@
-**Variable Definition Preference**
-1 - env vars
-2 - terraform.tfvars
-3 - *.auto.tfvars (in alphabetical order)
-4 - -var or -var-file (cli flags)
+# Terraform Variables and Outputs
 
-**Basic types**
-- string
-- number
-- bool
-- list - can have duplicate values
-- map - key-value pairs
-- set - can't have duplicate values
-- objects
-- tuple - can contain different var types
-- any
+## Variable Definition Preference
 
+Terraform has several ways to define variables, and they have the following order of precedence:
 
-**CLI**
-`terraform apply -var "var-name=var-value"` 
-`terraform output <var-name>`
+1. Environment variables (env vars)
+2. `terraform.tfvars` file, if present
+3. `*.auto.tfvars` files, if present, in alphabetical order
+4. `-var` and `-var-file` options on the command line (cli flags)
 
-**The Variable block**
+## Basic Types
+
+Terraform supports several types of variables:
+
+- `string`
+- `number`
+- `bool`
+- `list`: Can have duplicate values
+- `map`: Key-value pairs
+- `set`: Can't have duplicate values
+- `object`: A collection of named attributes with specific types
+- `tuple`: A sequence of types
+- `any`: Any type is acceptable
+
+## The Variable Block
+
+You can define a variable in Terraform using the `variable` block. You can specify the `type`, `default value`, and a `description`. You can also add a `validation condition`.
+
 ```yml
 variable "ami" {
     default = "default value should be consistent with var type"
     type = string
     description = "Description here"
-        validation {
-            condition = substr(var.ami, 0, 4) == "ami-"
-            error_message = "The ami should start with \"ami-\"."
-        }
-}
-```
-
-**Examples**
-variables.tf
-```yml
-variable "prefix" {
-    default = ["test", "dev", "prod"]
-    type = list(string)
-}
-variable "separator" {
-    default = {
-        "test" = "_"
-        "dev" = "-"
-        "prod" = "*"
+    validation {
+        condition = substr(var.ami, 0, 4) == "ami-"
+        error_message = "The ami should start with \"ami-\"."
     }
-    type = map(string)
-}
-variable "length" {
-    default = [1, 2, 3]
-    type = set(number)
-}
-variable "person" {
-    default = {
-        name = "my-name"
-        identity = "my-identity"
-        age = "1"
-    }
-    type = object({
-        name = string
-        identity = string
-        age = number
-    })
-}
-variable "web" {
-    default = ["web1", 1, "true"]
-    type = tuple([string, number, bool])
 }
 ```
 
-#to utilise vars
-```yml
-resource "random_pet" "test" {
-    prefix = var.prefix[0]
-    separator = var.separator["test"]
-    length = var.length[0]
-}
-```
+### Variables in Bulk
 
-**Variables in bulk**
-`terraform.tfvars, terraform.tfvars.json`
-`*.auto.tfvars, *.auto.tfvars.json`
-- these var files are automatically loaded by TF
+You can define multiple variables at once in a `terraform.tfvars` or `*.auto.tfvars` file. These files are automatically loaded by Terraform.
+
 ```yml
 var-name="var-value"
 ...
 ...
 ```
 
+# Output Variables
 
-**Output Variables**
- - can be used to store value of an expression then feed to other resources
- - output displays after `apply`
-main.tf
+Output variables are a way to tell Terraform what data is important. This data is outputted when `apply` is called, and can be queried using the `terraform output` command.
+
 ```yml
-resource "aws_instance" "my-instance" {
-    ami = var.ami
-    instance_type = var.instance)type
-}
-
 output "public-ip" {
     value = aws_instance.my-instance.public_ip
     description = "display public IP of instance"
 }
 ```
-#to display outputs
-`terraform output`
-`terraform output public-ip`
+
+To display outputs:
+
+```bash
+terraform output
+terraform output public-ip
+```
