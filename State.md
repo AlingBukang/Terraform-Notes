@@ -1,45 +1,22 @@
-`terraform state [list|mv|pull|push|rm|show] [opts] [args]`
+# Terraform State
 
-**with json query**
-```sh
-terraform state pull | jq '.resources[] | select(.name == "state-locking-
-db")|.instances[].attributes.hash_key'`
+In Terraform, the "state" is a crucial component that keeps track of the resources it manages. After creating resources, Terraform saves a JSON-formatted map of the resources in the `terraform.tfstate` file.
+
+## Local State
+
+By default, Terraform stores the state locally in a file named `terraform.tfstate`. When running `terraform plan` or `terraform apply`, Terraform will detect the difference between the last-known state and the current state. To force Terraform not to refresh the state, you can use the `-refresh=false` option.
+
+```bash
+terraform apply -refresh=false
 ```
 
-**Local State**
+## Remote State
 
-When a resource is created after running the `terraform apply` command, a state file is created within the dir where the config file are located, by default.
+For team-based workflows, it is recommended to use a `shared remote state`. This allows for better collaboration and prevents any conflicts in the state. Remote state is stored on a remote data store (like AWS S3, GCS, etc.) and includes features like state locking and encryption.
 
-`terraform.tfstate` - state file
-`terraform.tfstate.backup` - backup
+Here’s an example of how to configure Terraform to store the state in an S3 bucket and use a DynamoDB table for state locking:
 
-The state file contains the complete record of the infrastructure(blueprint) created by TF. It is the single source-of-truth for TF when executing commands such as `plan` and `apply`.
-
-Running `plan` or `plan` on an existing resources, TF will detect difference between the planned config and existing resources and will take note of the changes to be applied. The TF state will be refreshed in-memory prior to plan or apply. The refreshed state will be used to calculate the plan, but will not be persisted to local or remote state storage.
-
-**To force TF not to refresh state**
-`terraform apply -refresh=false`
-
-
-**Remote State**
-- allows collaboration
-- central manage
-- implements state locking to safeguard from users using the same state file at the same time
-- security - can implement encryption of state file and state locking
-
-Best practice - implement state locking by storing TF state into a remote state backend such as file sharing like S3, TF cloud, etc. instead of version control.
-
-Remote State Backend providers:
-- AWS S3
-- Google Cloud Storage
-- HashiCorp Consul
-- Terraform Cloud
-
-Consul and TF Cloud automatically load and upload state files.
-
-**Implement remote state locking with S3 and DynamoDB**
-
-main.tf
+`main.tf`
 ```yml
 resource "local_file" "pet" {
     filename = "/root/pets/txt"
@@ -47,7 +24,7 @@ resource "local_file" "pet" {
 }
 ```
 
-terraform.tf
+`terraform.tf`
 ```yml
 terraform {
     backend "s3" {
@@ -57,4 +34,21 @@ terraform {
         dynamodb_table = "state-locking"
     }
 }
+```
+
+## Terraform State Commands
+
+Terraform provides several commands to manage and inspect the state:
+
+- `terraform state list`: List resources in the state.
+- `terraform state mv`: Move an item in the state.
+- `terraform state pull`: Manually download and output the state from remote state.
+- `terraform state push`: Manually upload a local state file to remote state.
+- `terraform state rm`: Remove items from the state.
+- `terraform state show`: Show a resource in the state.
+
+You can also use `jq` to query the state in JSON format:
+
+```bash
+terraform state pull | jq '.resources[] | select(.name == "state-locking-db")|.instances[].attributes.hash_key'
 ```
