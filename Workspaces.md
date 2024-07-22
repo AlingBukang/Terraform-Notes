@@ -1,16 +1,29 @@
-**Workspace**
-- use for multi-environment set-up, e.g. dev, prod
-  
-`terraform workspace list` 
-`terraform workspace new [project-name]` - create new workspace
-`terrform workspace select [project-name]`  - to switch tf projects
+# Terraform Workspaces
 
-A new directory called `terraform.tfstate.d` will be created that will contain dirs of each workspaces containing their respective `terraform.tfstate` file.
+Terraform Workspaces provide an efficient way to manage multiple environments (like dev, staging, prod) with the same configuration. Each workspace has its own separate state file, allowing resources within each workspace to be managed separately.
 
-To display contents of the dir:
-`tree terraform.tfstate.d/`
+## Managing Workspaces
 
-**main.tf**
+You can create, list, and select workspaces using the `terraform workspace` command:
+
+```bash
+terraform workspace new [project-name]  # create new workspace
+terraform workspace select [project-name]  # switch to a workspace
+terraform workspace list  # list all workspaces
+```
+
+When a new workspace is created, a new directory named `terraform.tfstate.d` is created that contains directories for each workspace, each containing their respective `terraform.tfstate` file.
+
+To display the contents of the directory, you can use the `tree` command:
+
+```bash
+tree terraform.tfstate.d/
+```
+
+## Workspace-Specific Variables
+
+You can use workspace-specific variables to customize your configuration for different workspaces. For example, you might have different regions or AMIs for your dev and prod environments:
+
 ```yml
 module "payroll_app" {
     source = "../modules/payroll-app"
@@ -19,7 +32,8 @@ module "payroll_app" {
 }
 ```
 
-**variables.tf**
+In the `variables.tf` file, you can define a `map` variable for each environment:
+
 ```yml
 variable "region" {
     type = map
@@ -28,8 +42,8 @@ variable "region" {
         "uk-payroll" = "eu-west-2"
         "india-payroll" = "ap-south-1"
     }
-
 }
+
 variable "ami" {
     type = map
     default = {
@@ -40,17 +54,9 @@ variable "ami" {
 }
 ```
 
-**provider.tf**
-```yml
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      version = "4.15.0"
-    }
-  }
-}
+In the `provider.tf` file, you can use the `lookup` function to get the value for the current workspace:
 
+```yml
 provider "aws" {
   region                      = lookup(var.region, terraform.workspace)
   skip_credentials_validation = true
@@ -64,9 +70,20 @@ provider "aws" {
 }
 ```
 
-**To test functions**
-Use `terraform console`
-`terraform.workspace`
+## Testing Functions
 
-**To run**
-`terraform workspace select [project-name]; terraform apply`
+You can use the `terraform console` command to test functions and expressions. For example, to get the current workspace, you can use the `terraform.workspace` variable:
+
+```bash
+terraform console
+terraform.workspace
+```
+
+## Running Terraform with Workspaces
+
+To run Terraform with a specific workspace, you can select the workspace and then run `terraform apply`:
+
+```bash
+terraform workspace select [project-name]
+terraform apply
+```
