@@ -55,3 +55,8 @@ resource "aws_iam_user_policy_attachment" "admin" {
     user = aws_iam_user.admin.name
     policy_arn = aws_iam_policy.admin.arn
 }
+```
+
+In this example, we first configure the AWS provider with the desired region. Then, we create an IAM user with the `aws_iam_user` resource. We also define an IAM policy with the `aws_iam_policy` resource, and finally, we attach the policy to the user with the `aws_iam_user_policy_attachment` resource.
+
+Remember to replace the placeholders in the `Action` and `Resource` fields of the policy with the actual AWS service actions and resources you want to allow.
